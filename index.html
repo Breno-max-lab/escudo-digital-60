@@ -184,6 +184,11 @@
       margin-bottom: 4px;
     }
 
+    .inst-tag-danger {
+      color: var(--danger);
+      background-color: var(--danger-bg);
+    }
+
     h1 {
       font-size: calc(26px * var(--font-scale));
       font-weight: 800;
@@ -221,6 +226,7 @@
       text-align: left;
       margin-bottom: 14px;
       font-family: inherit;
+      text-decoration: none;
       transition: transform 0.12s, box-shadow 0.12s;
     }
 
@@ -245,6 +251,12 @@
       color: var(--text-main);
     }
 
+    .action-card-danger {
+      background-color: var(--danger-bg);
+      border-color: var(--danger);
+      color: var(--text-main);
+    }
+
     .action-emoji {
       width: 52px;
       height: 52px;
@@ -261,6 +273,14 @@
       background-color: var(--primary-light);
     }
 
+    .action-card-danger .action-emoji {
+      background-color: #ffffff;
+    }
+
+    body.high-contrast .action-card-danger .action-emoji {
+      background-color: #000000;
+    }
+
     .action-title {
       display: block;
       font-size: calc(19px * var(--font-scale));
@@ -273,11 +293,11 @@
       display: block;
       font-size: calc(15px * var(--font-scale));
       font-weight: 500;
-      opacity: 0.9;
+      opacity: 0.92;
       line-height: 1.3;
     }
 
-    /* Botões Padrão */
+    /* Botões Padrão e Links de Ligação */
     .btn {
       width: 100%;
       min-height: 60px;
@@ -294,6 +314,7 @@
       gap: 10px;
       margin-bottom: 14px;
       text-align: center;
+      text-decoration: none;
       transition: transform 0.1s;
     }
 
@@ -309,6 +330,17 @@
 
     body.high-contrast .btn-primary {
       background: #facc15;
+      color: #000000;
+    }
+
+    .btn-call {
+      background-color: var(--danger);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(185, 28, 28, 0.25);
+    }
+
+    body.high-contrast .btn-call {
+      background-color: #f87171;
       color: #000000;
     }
 
@@ -442,7 +474,7 @@
       margin-top: 6px;
     }
 
-    /* Caixas de Resultado e Alerta */
+    /* Caixas de Resultado, Alerta e Passos de Emergência */
     .alert-box {
       padding: 20px;
       border-radius: 16px;
@@ -466,6 +498,40 @@
       background-color: var(--warning-bg);
       border-color: var(--warning);
       color: var(--text-main);
+    }
+
+    .step-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      margin-bottom: 12px;
+      background-color: var(--bg-page);
+    }
+
+    body.high-contrast .step-item {
+      background-color: #000000;
+      border-width: 2px;
+    }
+
+    .step-num {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      color: #ffffff;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    body.high-contrast .step-num {
+      background-color: #facc15;
+      color: #000000;
     }
 
     .checklist {
@@ -556,9 +622,9 @@
         </div>
       </div>
 
-      <p>Sua ferramenta gratuita de proteção contra golpes no celular. Treine sem medo ou analise uma mensagem suspeita agora.</p>
+      <p>Sua ferramenta gratuita de proteção contra golpes no celular. Treine sem medo, analise mensagens ou peça ajuda rápida.</p>
 
-      <button class="btn btn-audio" onclick="speakText('Bem-vindo ao Escudo Digital 60 mais. Escolha uma das opções abaixo: Treinar no Simulador de Golpes ou Verificar Mensagem Suspeita.')">
+      <button class="btn btn-audio" onclick="speakText('Bem-vindo ao Escudo Digital 60 mais. Escolha uma das três opções abaixo: 1, Simulador de Golpes. 2, Detetive de Mensagens. 3, Emergência e Telefones Oficiais.')">
         🔊 Ouvir explicação desta tela
       </button>
 
@@ -566,7 +632,7 @@
         <span class="action-emoji">🛡️</span>
         <span>
           <span class="action-title">1. Simulador de Golpes</span>
-          <span class="action-desc">Pratique com exemplos reais do WhatsApp e SMS</span>
+          <span class="action-desc">Pratique com 5 exemplos reais do WhatsApp e SMS</span>
         </span>
       </button>
 
@@ -577,17 +643,25 @@
           <span class="action-desc">Envie um print ou texto para verificar se é golpe</span>
         </span>
       </button>
+
+      <button class="action-card action-card-danger" onclick="showScreen('screen-emergency')">
+        <span class="action-emoji">🆘</span>
+        <span>
+          <span class="action-title">3. Emergência e Telefones</span>
+          <span class="action-desc">Caiu em um golpe? Veja o que fazer e ligue rápido</span>
+        </span>
+      </button>
     </section>
 
     <!-- TELA 2: SIMULADOR DE GOLPES -->
     <section id="screen-sim" class="card hidden">
       <div class="progress-wrap">
         <div class="progress-label">
-          <span id="sim-progress">Cenário 1 de 2</span>
+          <span id="sim-progress">Cenário 1 de 5</span>
           <span>Treino Prático</span>
         </div>
         <div class="progress-track">
-          <div class="progress-fill" id="sim-progress-bar" style="width: 50%;"></div>
+          <div class="progress-fill" id="sim-progress-bar" style="width: 20%;"></div>
         </div>
       </div>
 
@@ -689,6 +763,59 @@
       </button>
     </section>
 
+    <!-- TELA 5: EMERGÊNCIA E TELEFONES OFICIAIS -->
+    <section id="screen-emergency" class="card hidden">
+      <span class="inst-tag inst-tag-danger">Ajuda Rápida • Números Reais</span>
+      <h2>Emergência e Telefones</h2>
+      <p>Se você caiu em um golpe, clicou em um link estranho ou fez um Pix para golpistas, <strong>aja rápido</strong> seguindo estes passos:</p>
+
+      <button class="btn btn-audio" onclick="speakEmergency()">
+        🔊 Ouvir orientações de emergência
+      </button>
+
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div>
+          <strong>Ligue imediatamente para o seu banco</strong><br />
+          Use apenas o telefone que está escrito atrás do seu cartão. Peça o bloqueio da conta e solicite o <strong>MED (Mecanismo Especial de Devolução do Pix)</strong>.
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div>
+          <strong>Guarde todas as provas</strong><br />
+          Tire prints da conversa, anote o número de telefone do golpista e salve o comprovante da transferência.
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div>
+          <strong>Registre um Boletim de Ocorrência (B.O.)</strong><br />
+          Procure a delegacia mais próxima em Santarém ou faça pela Delegacia Virtual da Polícia Civil do Pará.
+        </div>
+      </div>
+
+      <h3 style="margin: 20px 0 12px 0;">Telefones Oficiais Gratuitos:</h3>
+
+      <a href="tel:190" class="btn btn-call">
+        🚓 Ligar 190 — Polícia Militar
+      </a>
+
+      <a href="tel:135" class="btn btn-primary">
+        🏛️ Ligar 135 — Central Oficial do INSS
+      </a>
+
+      <a href="tel:145" class="btn btn-primary">
+        🏦 Ligar 145 — Banco Central do Brasil
+      </a>
+
+      <button class="btn btn-secondary" style="margin-top: 10px;" onclick="goHome()">
+        ⬅️ Voltar ao Início
+      </button>
+    </section>
+
     <footer>
       Extensão Tecnológica • <strong>PET-IEG / UFOPA</strong> • Santarém - PA
     </footer>
@@ -696,7 +823,7 @@
 
   <script>
     // ==========================================
-    // 1. DADOS DOS CENÁRIOS
+    // 1. DADOS DOS 5 CENÁRIOS DO SIMULADOR
     // ==========================================
     const scenarios = [
       {
@@ -758,6 +885,87 @@
           "Sites verdadeiros do governo terminam sempre em .gov.br.",
           "Em caso de dúvida, ligue gratuitamente para o telefone 135."
         ]
+      },
+      {
+        title: "Cenário 3: Falsa Central de Segurança do Banco",
+        context: "Você recebeu uma mensagem no WhatsApp dizendo que tentaram fazer uma compra no seu cartão e pedindo para instalar um aplicativo de suporte.",
+        avatar: "🏦",
+        sender: "Suporte Segurança Bancária",
+        subsender: "Conta comercial sem selo azul",
+        message: "ALERTA DE SEGURANÇA: Identificamos uma compra suspeita de R$ 2.490,00 no seu cartão agora. Caso não reconheça, baixe nosso aplicativo de proteção para cancelar: http://suporte-seguro-app.net ou informe sua senha de 4 dígitos.",
+        options: [
+          {
+            text: "Baixar o aplicativo ou informar minha senha para cancelar a compra",
+            isSafe: false,
+            resultTitle: "⚠️ Perigo! É o Golpe da Falsa Central",
+            resultSummary: "Esse aplicativo permite que o golpista mexa no seu celular à distância e limpe sua conta bancária. Nenhum banco pede senha ou instalação de aplicativos por link."
+          },
+          {
+            text: "Não clicar em nada e ligar para o telefone escrito atrás do meu cartão",
+            isSafe: true,
+            resultTitle: "✅ Perfeito! Atitude 100% segura!",
+            resultSummary: "Ao ligar pelo número oficial impresso no verso do cartão (usando outro telefone se possível), você fala direto com o banco verdadeiro."
+          }
+        ],
+        tips: [
+          "Bancos nunca pedem sua senha nem pedem para instalar aplicativos por link.",
+          "Verifique se o perfil tem o selo azul oficial; na dúvida, ignore a mensagem.",
+          "Ligue sempre para o telefone oficial impresso atrás do seu cartão."
+        ]
+      },
+      {
+        title: "Cenário 4: O Golpe do 'Pix Errado'",
+        context: "Um número desconhecido manda mensagem dizendo que fez um Pix por engano para você e pede para devolver para outra conta.",
+        avatar: "?",
+        sender: "+55 (91) 98456-1122",
+        subsender: "Número desconhecido",
+        message: "Bom dia! Por favor me ajuda, acabei de fazer um Pix de R$ 400,00 errado para a sua chave sem querer, é o dinheiro do remédio da minha mãe. Pode devolver para essa outra chave Pix aqui: 84920192-chave-terceiro? Deus te abençoe!",
+        options: [
+          {
+            text: "Transferir R$ 400,00 para a chave que a pessoa mandou na mensagem",
+            isSafe: false,
+            resultTitle: "⚠️ Cuidado! Você cairia no Golpe do Pix Errado",
+            resultSummary: "O golpista aciona a devolução oficial no banco (MED) ao mesmo tempo em que você manda o dinheiro para outra conta, fazendo você perder o valor em dobro."
+          },
+          {
+            text: "Conferir o extrato do meu banco e usar apenas o botão 'Devolver Pix' oficial",
+            isSafe: true,
+            resultTitle: "✅ Muito bem! Você agiu da forma certa!",
+            resultSummary: "Se o dinheiro realmente caiu na sua conta, a devolução deve ser feita apenas pela função 'Devolver' do próprio banco, que manda de volta para a mesma conta de origem."
+          }
+        ],
+        tips: [
+          "Nunca devolva um Pix para uma chave diferente de quem enviou.",
+          "Confira primeiro no aplicativo do seu banco se o dinheiro realmente entrou.",
+          "Use exclusivamente a opção 'Devolver Pix' dentro do extrato bancário."
+        ]
+      },
+      {
+        title: "Cenário 5: Prêmio ou Benefício Liberado",
+        context: "Você recebeu uma mensagem dizendo que ganhou um vale-compras de aniversário e precisa apenas pagar uma taxa de entrega.",
+        avatar: "🎁",
+        sender: "Promoção Nacional",
+        subsender: "Mensagem encaminhada",
+        message: "PARABÉNS! Seu CPF foi sorteado no programa Cliente Fiel e ganhou uma cesta + R$ 1.000,00 no Pix! Para liberar o envio hoje, pague apenas a taxa de emissão de R$ 39,90 neste link: http://resgate-premio-oficial.com",
+        options: [
+          {
+            text: "Pagar os R$ 39,90 no Pix para receber os R$ 1.000,00",
+            isSafe: false,
+            resultTitle: "⚠️ Atenção! É um golpe de falsa premiação",
+            resultSummary: "Você perderia os R$ 39,90 e não receberia prêmio nenhum. Nenhum sorteio verdadeiro cobra taxa antecipada para entregar dinheiro."
+          },
+          {
+            text: "Apagar a mensagem e não pagar nenhuma taxa",
+            isSafe: true,
+            resultTitle: "✅ Excelente! Você não caiu na armadilha!",
+            resultSummary: "Desconfie sempre de dinheiro fácil ou prêmios de sorteios dos quais você nunca participou."
+          }
+        ],
+        tips: [
+          "Ninguém ganha prêmios em dinheiro sem ter participado de um sorteio oficial.",
+          "Nunca pague taxas via Pix para 'liberar' prêmios ou benefícios.",
+          "Desconfie de mensagens com rótulo 'Encaminhada' no WhatsApp."
+        ]
       }
     ];
 
@@ -802,12 +1010,17 @@
       speakText(lastFeedbackSpeech);
     }
 
+    function speakEmergency() {
+      const text = "Orientações de emergência caso tenha caído em um golpe. Passo 1: Ligue imediatamente para o seu banco usando o número atrás do cartão e peça o bloqueio e a devolução do Pix. Passo 2: Tire prints da conversa e guarde o comprovante. Passo 3: Registre um Boletim de Ocorrência. Abaixo você pode tocar nos botões para ligar direto para a Polícia no 190, INSS no 135 ou Banco Central no 145.";
+      speakText(text);
+    }
+
     // ==========================================
     // 3. NAVEGAÇÃO ENTRE TELAS
     // ==========================================
     function showScreen(screenId) {
       window.speechSynthesis.cancel();
-      ['screen-home', 'screen-sim', 'screen-feedback', 'screen-detective'].forEach(id => {
+      ['screen-home', 'screen-sim', 'screen-feedback', 'screen-detective', 'screen-emergency'].forEach(id => {
         document.getElementById(id).classList.add('hidden');
       });
       document.getElementById(screenId).classList.remove('hidden');
