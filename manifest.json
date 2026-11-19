@@ -1,0 +1,18 @@
+{
+  "name": "Escudo Digital 60+ • PET-IEG UFOPA",
+  "short_name": "Escudo 60+",
+  "description": "Simulador de golpes e detetive com Inteligência Artificial para o público 60+.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4f6f9",
+  "theme_color": "#0f4c81",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

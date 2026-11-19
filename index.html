@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Escudo Digital 60+ — Protótipo PET-IEG / UFOPA</title>
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#0f4c81" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <style>
+    :root {
+      --bg-page: #f4f6f9;
+      --bg-card: #ffffff;
+      --text-main: #111827;
+      --text-muted: #374151;
+      --primary: #0f4c81;
+      --primary-hover: #0a355c;
+      --success: #15803d;
+      --success-bg: #dcfce7;
+      --danger: #b91c1c;
+      --danger-bg: #fee2e2;
+      --warning: #b45309;
+      --warning-bg: #fef3c7;
+      --border-color: #cbd5e1;
+      --wa-header: #075e54;
+      --wa-bg: #efeae2;
+      --wa-bubble: #ffffff;
+      --font-scale: 1;
+    }
+
+    body.high-contrast {
+      --bg-page: #000000;
+      --bg-card: #111111;
+      --text-main: #ffffff;
+      --text-muted: #facc15;
+      --primary: #facc15;
+      --primary-hover: #eab308;
+      --success: #4ade80;
+      --success-bg: #052e16;
+      --danger: #f87171;
+      --danger-bg: #450a0a;
+      --warning: #fbbf24;
+      --warning-bg: #451a03;
+      --border-color: #ffffff;
+      --wa-header: #000000;
+      --wa-bg: #1a1a1a;
+      --wa-bubble: #000000;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      font-size: calc(20px * var(--font-scale));
+      line-height: 1.5;
+      padding-bottom: 40px;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    /* Barra Superior de Acessibilidade */
+    .a11y-bar {
+      background-color: var(--primary);
+      color: #ffffff;
+      padding: 12px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    body.high-contrast .a11y-bar {
+      background-color: #000000;
+      border-bottom: 3px solid #facc15;
+    }
+
+    .a11y-controls {
+      max-width: 680px;
+      margin: 0 auto;
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .a11y-btn {
+      flex: 1;
+      min-width: 140px;
+      min-height: 52px;
+      padding: 10px 14px;
+      font-size: calc(17px * var(--font-scale));
+      font-weight: 700;
+      border: 2px solid #ffffff;
+      border-radius: 10px;
+      background-color: rgba(255,255,255,0.15);
+      color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    body.high-contrast .a11y-btn {
+      border-color: #facc15;
+      color: #facc15;
+      background-color: #000000;
+    }
+
+    .a11y-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* Container Principal */
+    .container {
+      max-width: 680px;
+      margin: 20px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background-color: var(--bg-card);
+      border: 2px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    }
+
+    h1 {
+      font-size: calc(28px * var(--font-scale));
+      line-height: 1.25;
+      margin-bottom: 12px;
+      color: var(--primary);
+    }
+
+    h2 {
+      font-size: calc(24px * var(--font-scale));
+      line-height: 1.3;
+      margin-bottom: 12px;
+    }
+
+    p {
+      margin-bottom: 16px;
+    }
+
+    /* Botões Grandes e Acessíveis */
+    .btn {
+      width: 100%;
+      min-height: 64px;
+      padding: 16px 20px;
+      font-size: calc(20px * var(--font-scale));
+      font-weight: 700;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      text-align: center;
+      transition: transform 0.1s;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #ffffff;
+    }
+
+    body.high-contrast .btn-primary {
+      background-color: #facc15;
+      color: #000000;
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .btn-audio {
+      background-color: #e0f2fe;
+      border-color: #0284c7;
+      color: #0369a1;
+      min-height: 56px;
+      font-size: calc(18px * var(--font-scale));
+    }
+
+    body.high-contrast .btn-audio {
+      background-color: #000000;
+      border-color: #38bdf8;
+      color: #38bdf8;
+    }
+
+    .btn-option {
+      background-color: var(--bg-card);
+      border: 3px solid var(--primary);
+      color: var(--text-main);
+      justify-content: flex-start;
+      text-align: left;
+      line-height: 1.35;
+    }
+
+    .btn-option:hover {
+      background-color: rgba(15, 76, 129, 0.08);
+    }
+
+    /* Simulação de Tela de Celular / WhatsApp */
+    .phone-sim {
+      border: 3px solid #334155;
+      border-radius: 18px;
+      overflow: hidden;
+      margin: 18px 0;
+      background-color: var(--wa-bg);
+    }
+
+    body.high-contrast .phone-sim {
+      border-color: #ffffff;
+    }
+
+    .wa-top {
+      background-color: var(--wa-header);
+      color: #ffffff;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+    }
+
+    body.high-contrast .wa-top {
+      border-bottom: 2px solid #ffffff;
+    }
+
+    .wa-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background-color: #cbd5e1;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .wa-body {
+      padding: 18px;
+    }
+
+    .wa-msg {
+      background-color: var(--wa-bubble);
+      color: var(--text-main);
+      padding: 16px;
+      border-radius: 0 14px 14px 14px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 10px;
+    }
+
+    .wa-time {
+      display: block;
+      text-align: right;
+      font-size: calc(14px * var(--font-scale));
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    /* Caixas de Resultado e Alerta */
+    .alert-box {
+      padding: 20px;
+      border-radius: 14px;
+      border: 3px solid;
+      margin-bottom: 18px;
+    }
+
+    .alert-danger {
+      background-color: var(--danger-bg);
+      border-color: var(--danger);
+      color: var(--text-main);
+    }
+
+    .alert-success {
+      background-color: var(--success-bg);
+      border-color: var(--success);
+      color: var(--text-main);
+    }
+
+    .alert-warning {
+      background-color: var(--warning-bg);
+      border-color: var(--warning);
+      color: var(--text-main);
+    }
+
+    .checklist {
+      padding-left: 24px;
+      margin: 12px 0 18px 0;
+    }
+
+    .checklist li {
+      margin-bottom: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 130px;
+      padding: 16px;
+      font-size: calc(19px * var(--font-scale));
+      font-family: inherit;
+      border-radius: 12px;
+      border: 3px solid var(--border-color);
+      background-color: var(--bg-card);
+      color: var(--text-main);
+      margin-bottom: 14px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: calc(15px * var(--font-scale));
+      font-weight: 700;
+      background-color: var(--primary);
+      color: #ffffff;
+      margin-bottom: 10px;
+    }
+
+    body.high-contrast .badge {
+      background-color: #facc15;
+      color: #000000;
+    }
+
+    footer {
+      text-align: center;
+      font-size: calc(15px * var(--font-scale));
+      color: var(--text-muted);
+      margin-top: 24px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra de Acessibilidade Fixa -->
+  <header class="a11y-bar" aria-label="Controles de Acessibilidade">
+    <div class="a11y-controls">
+      <button class="a11y-btn" onclick="toggleFontSize()" aria-label="Aumentar ou diminuir tamanho da letra">
+        🔍 Tamanho da Letra (<span id="font-label">Normal</span>)
+      </button>
+      <button class="a11y-btn" onclick="toggleContrast()" aria-label="Ativar ou desativar alto contraste">
+        🌓 Alto Contraste
+      </button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- TELA 1: INÍCIO -->
+    <section id="screen-home" class="card">
+      <span class="badge">PET-IEG • UFOPA Santarém</span>
+      <h1>Escudo Digital 60+</h1>
+      <p>Aprenda a identificar golpes no celular sem medo de errar e verifique mensagens suspeitas de forma simples.</p>
+
+      <button class="btn btn-audio" onclick="speakText('Bem-vindo ao Escudo Digital 60 mais. Escolha uma das opções abaixo: Treinar com Simulador de Golpes ou Verificar Mensagem Suspeita.')">
+        🔊 Ouvir explicação desta tela
+      </button>
+
+      <button class="btn btn-primary" onclick="startSimulator(0)">
+        🛡️ 1. Treinar com Simulador de Golpes
+      </button>
+
+      <button class="btn btn-secondary" onclick="showScreen('screen-detective')">
+        🔎 2. Verificar Mensagem Suspeita
+      </button>
+    </section>
+
+    <!-- TELA 2: SIMULADOR DE GOLPES -->
+    <section id="screen-sim" class="card hidden">
+      <span class="badge" id="sim-progress">Cenário 1 de 2</span>
+      <h2 id="sim-title">Título do Cenário</h2>
+      <p id="sim-context">Contexto da situação.</p>
+
+      <button class="btn btn-audio" onclick="speakCurrentScenario()">
+        🔊 Ouvir esta mensagem em voz alta
+      </button>
+
+      <!-- Tela Simulada -->
+      <div class="phone-sim" role="region" aria-label="Simulação de mensagem no celular">
+        <div class="wa-top">
+          <div class="wa-avatar" id="sim-avatar">?</div>
+          <div>
+            <div id="sim-sender">Número Desconhecido</div>
+            <div style="font-size: 0.8em; font-weight: 400;" id="sim-subsender">online</div>
+          </div>
+        </div>
+        <div class="wa-body">
+          <div class="wa-msg">
+            <span id="sim-message">Texto da mensagem simulada...</span>
+            <span class="wa-time">10:42 ✓✓</span>
+          </div>
+        </div>
+      </div>
+
+      <p><strong>O que você faria nessa situação?</strong></p>
+      <div id="sim-options"></div>
+
+      <button class="btn btn-secondary" style="margin-top: 10px;" onclick="goHome()">
+        ⬅️ Voltar ao Início
+      </button>
+    </section>
+
+    <!-- TELA 3: FEEDBACK DO SIMULADOR -->
+    <section id="screen-feedback" class="card hidden">
+      <div id="feedback-box" class="alert-box">
+        <h2 id="feedback-heading">Resultado</h2>
+        <p id="feedback-summary">Explicação principal.</p>
+      </div>
+
+      <h3>Sinais de alerta para lembrar:</h3>
+      <ul class="checklist" id="feedback-tips"></ul>
+
+      <button class="btn btn-audio" onclick="speakFeedback()">
+        🔊 Ouvir explicação
+      </button>
+
+      <button class="btn btn-primary" id="btn-next-scenario" onclick="nextScenario()">
+        ➡️ Próximo Treino
+      </button>
+
+      <button class="btn btn-secondary" onclick="goHome()">
+        🏠 Voltar ao Início
+      </button>
+    </section>
+
+    <!-- TELA 4: DETETIVE DE GOLPES (TEXTO + PRINT DE TELA) -->
+    <section id="screen-detective" class="card hidden">
+      <span class="badge">Detetive com Inteligência Artificial</span>
+      <h2>Detetive de Golpes</h2>
+      <p>Envie um <strong>print (foto) da conversa</strong> ou cole o texto da mensagem suspeita abaixo:</p>
+
+      <!-- Botão Grande para Escolher Print da Galeria -->
+      <input type="file" id="image-input" accept="image/*" class="hidden" onchange="handleImageUpload(event)" />
+      <button class="btn btn-primary" style="background-color: #0369a1;" onclick="document.getElementById('image-input').click()">
+        📷 Enviar Print (Foto) da Mensagem
+      </button>
+
+      <!-- Pré-visualização do Print Selecionado -->
+      <div id="image-preview-container" class="hidden" style="margin-bottom: 16px; text-align: center; border: 2px dashed var(--primary); padding: 12px; border-radius: 12px;">
+        <p style="font-weight: 700; margin-bottom: 8px;">✅ Print carregado com sucesso:</p>
+        <img id="image-preview" src="" alt="Prévia do print selecionado" style="max-width: 100%; max-height: 260px; border-radius: 8px; border: 1px solid var(--border-color);" />
+        <button class="btn btn-secondary" style="margin-top: 10px; min-height: 48px;" onclick="clearUploadedImage()">
+          🗑️ Remover esta foto
+        </button>
+      </div>
+
+      <p style="text-align: center; font-weight: 700; margin: 10px 0;">— OU digite/cole o texto —</p>
+
+      <button class="btn btn-secondary" onclick="fillExampleMessage()">
+        📋 Testar com um exemplo de texto pronto
+      </button>
+
+      <label for="suspect-input" style="display:block; font-weight:700; margin-bottom:8px;">
+        Texto da mensagem (opcional se enviou foto):
+      </label>
+      <textarea id="suspect-input" placeholder="Cole aqui a mensagem que você recebeu..."></textarea>
+
+      <button class="btn btn-primary" onclick="analyzeMessage()">
+        🔎 Analisar Agora
+      </button>
+
+      <div id="detective-result" class="hidden" style="margin-top: 20px;"></div>
+
+      <button class="btn btn-secondary" style="margin-top: 10px;" onclick="goHome()">
+        ⬅️ Voltar ao Início
+      </button>
+    </section>
+
+    <footer>
+      Protótipo Funcional (PWA) • Projeto PET-IEG / UFOPA
+    </footer>
+  </main>
+
+  <script>
+    // ==========================================
+    // 1. DADOS DOS CENÁRIOS (JSON DECLARATIVO)
+    // ==========================================
+    const scenarios = [
+      {
+        title: "Cenário 1: Pedido urgente no WhatsApp",
+        context: "Você recebeu esta mensagem de um número que não está salvo na sua agenda, mas usa a foto do seu filho(a).",
+        avatar: "F",
+        sender: "+55 (93) 99123-4567",
+        subsender: "Número desconhecido",
+        message: "Oi mãe/pai, tudo bem? Meu celular caiu e quebrou, estou usando esse número novo provisório. Preciso pagar uma conta hoje urgente mas meu aplicativo do banco bloqueou. Consegue fazer um Pix de R$ 850,00 para um amigo meu? Amanhã eu te devolvo!",
+        options: [
+          {
+            text: "Fazer o Pix rápido para ajudar logo",
+            isSafe: false,
+            resultTitle: "⚠️ Atenção! Isso é o Golpe do Falso Parente",
+            resultSummary: "Você cairia no golpe. Golpistas pegam fotos públicas nas redes sociais e fingem urgência para você transferir dinheiro sem pensar."
+          },
+          {
+            text: "Ligar para o número antigo do meu filho(a) para confirmar",
+            isSafe: true,
+            resultTitle: "✅ Muito bem! Você evitou o golpe!",
+            resultSummary: "Esta é a atitude mais segura. Sempre confirme por ligação no número antigo ou pergunte algo que só a família saberia."
+          },
+          {
+            text: "Pedir a chave Pix para ver o nome da pessoa",
+            isSafe: false,
+            resultTitle: "⚠️ Cuidado! O golpista inventa uma desculpa",
+            resultSummary: "Mesmo aparecendo o nome de um desconhecido no Pix, o golpista dirá que é a conta de um 'amigo' ou 'fornecedor'. Nunca transfira sem ligar antes."
+          }
+        ],
+        tips: [
+          "Desconfie sempre de números novos pedindo dinheiro com muita pressa.",
+          "Ligue para o número antigo do familiar antes de fazer qualquer Pix.",
+          "Nunca transfira valores para contas de terceiros desconhecidos."
+        ]
+      },
+      {
+        title: "Cenário 2: Mensagem sobre benefício do INSS",
+        context: "Você recebeu um SMS avisando sobre um suposto bloqueio na sua aposentadoria ou benefício.",
+        avatar: "INSS",
+        sender: "AVISO-GOV (SMS)",
+        subsender: "Mensagem de texto",
+        message: "INSS INFORMA: Seu beneficio sera suspenso em 24h por falta de Prova de Vida. Evite o bloqueio atualizando seus dados agora: http://gov-prova-vida-segura.com",
+        options: [
+          {
+            text: "Clicar no link azul e digitar meu CPF e senha",
+            isSafe: false,
+            resultTitle: "⚠️ Atenção! Este link é falso (Phishing)",
+            resultSummary: "Você entregaria seus dados aos golpistas. O INSS não envia links por SMS ou WhatsApp pedindo senha ou dados bancários."
+          },
+          {
+            text: "Ignorar a mensagem e conferir direto no aplicativo oficial Meu INSS",
+            isSafe: true,
+            resultTitle: "✅ Excelente decisão! Você está protegido!",
+            resultSummary: "Sites oficiais do governo brasileiro sempre terminam em '.gov.br'. Nunca clique em links recebidos por mensagem."
+          }
+        ],
+        tips: [
+          "O INSS não manda links por SMS ou WhatsApp para fazer Prova de Vida.",
+          "Sites verdadeiros do governo terminam sempre em .gov.br.",
+          "Em caso de dúvida, ligue gratuitamente para o telefone 135."
+        ]
+      }
+    ];
+
+    let currentScenarioIdx = 0;
+    let currentFontLevel = 0; // 0 = Normal, 1 = Grande, 2 = Extra Grande
+    let lastFeedbackSpeech = "";
+
+    // ==========================================
+    // 2. ACESSIBILIDADE (FONTE, CONTRASTE E VOZ)
+    // ==========================================
+    function toggleFontSize() {
+      currentFontLevel = (currentFontLevel + 1) % 3;
+      const scales = [1, 1.2, 1.4];
+      const labels = ["Normal", "Grande", "Gigante"];
+      document.documentElement.style.setProperty('--font-scale', scales[currentFontLevel]);
+      document.getElementById('font-label').innerText = labels[currentFontLevel];
+    }
+
+    function toggleContrast() {
+      document.body.classList.toggle('high-contrast');
+    }
+
+    function speakText(text) {
+      if (!('speechSynthesis' in window)) {
+        alert("Seu navegador não suporta leitura em voz alta.");
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'pt-BR';
+      utterance.rate = 0.92;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function speakCurrentScenario() {
+      const sc = scenarios[currentScenarioIdx];
+      const fullText = `${sc.title}. ${sc.context}. A mensagem diz: ${sc.message}. O que você faria nessa situação?`;
+      speakText(fullText);
+    }
+
+    function speakFeedback() {
+      speakText(lastFeedbackSpeech);
+    }
+
+    // ==========================================
+    // 3. NAVEGAÇÃO ENTRE TELAS
+    // ==========================================
+    function showScreen(screenId) {
+      window.speechSynthesis.cancel();
+      ['screen-home', 'screen-sim', 'screen-feedback', 'screen-detective'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(screenId).classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goHome() {
+      showScreen('screen-home');
+    }
+
+    // ==========================================
+    // 4. LÓGICA DO SIMULADOR
+    // ==========================================
+    function startSimulator(idx) {
+      currentScenarioIdx = idx;
+      const sc = scenarios[idx];
+
+      document.getElementById('sim-progress').innerText = `Cenário ${idx + 1} de ${scenarios.length}`;
+      document.getElementById('sim-title').innerText = sc.title;
+      document.getElementById('sim-context').innerText = sc.context;
+      document.getElementById('sim-avatar').innerText = sc.avatar;
+      document.getElementById('sim-sender').innerText = sc.sender;
+      document.getElementById('sim-subsender').innerText = sc.subsender;
+      document.getElementById('sim-message').innerText = sc.message;
+
+      const optionsContainer = document.getElementById('sim-options');
+      optionsContainer.innerHTML = "";
+
+      sc.options.forEach((opt) => {
+        const btn = document.createElement('button');
+        btn.className = "btn btn-option";
+        btn.innerText = "👉 " + opt.text;
+        btn.onclick = () => handleOptionChoice(opt, sc);
+        optionsContainer.appendChild(btn);
+      });
+
+      showScreen('screen-sim');
+    }
+
+    function handleOptionChoice(option, scenario) {
+      const box = document.getElementById('feedback-box');
+      box.className = "alert-box " + (option.isSafe ? "alert-success" : "alert-danger");
+
+      document.getElementById('feedback-heading').innerText = option.resultTitle;
+      document.getElementById('feedback-summary').innerText = option.resultSummary;
+
+      const tipsList = document.getElementById('feedback-tips');
+      tipsList.innerHTML = "";
+      scenario.tips.forEach(tip => {
+        const li = document.createElement('li');
+        li.innerText = tip;
+        tipsList.appendChild(li);
+      });
+
+      const nextBtn = document.getElementById('btn-next-scenario');
+      if (currentScenarioIdx + 1 < scenarios.length) {
+        nextBtn.classList.remove('hidden');
+      } else {
+        nextBtn.classList.add('hidden');
+      }
+
+      lastFeedbackSpeech = `${option.resultTitle}. ${option.resultSummary}. Sinais de alerta: ${scenario.tips.join(". ")}`;
+      showScreen('screen-feedback');
+    }
+
+    function nextScenario() {
+      if (currentScenarioIdx + 1 < scenarios.length) {
+        startSimulator(currentScenarioIdx + 1);
+      } else {
+        goHome();
+      }
+    }
+
+    // ==========================================
+    // 5. DETETIVE DE GOLPES (TEXTO + PRINT MULTIMODAL)
+    // ==========================================
+    let uploadedImageBase64 = null;
+    let uploadedImageMime = "image/jpeg";
+
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 1440;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          uploadedImageMime = "image/jpeg";
+          uploadedImageBase64 = canvas.toDataURL("image/jpeg", 0.88);
+
+          document.getElementById('image-preview').src = uploadedImageBase64;
+          document.getElementById('image-preview-container').classList.remove('hidden');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearUploadedImage() {
+      uploadedImageBase64 = null;
+      document.getElementById('image-input').value = "";
+      document.getElementById('image-preview').src = "";
+      document.getElementById('image-preview-container').classList.add('hidden');
+    }
+
+    function fillExampleMessage() {
+      clearUploadedImage();
+      document.getElementById('suspect-input').value =
+        "CAIXA ECONOMICA: Seu acesso sera bloqueado hoje. Clique no link http://atualiza-caixa-seguro.net e confirme sua senha e chave Pix para evitar multa.";
+    }
+
+    async function analyzeMessage() {
+      const rawText = document.getElementById('suspect-input').value.trim();
+      const resultDiv = document.getElementById('detective-result');
+
+      if (!rawText && !uploadedImageBase64) {
+        alert("Por favor, envie um print (foto) ou escreva uma mensagem antes de analisar.");
+        return;
+      }
+
+      resultDiv.innerHTML = `
+        <div class="alert-box alert-warning">
+          <h3>⏳ Analisando ${uploadedImageBase64 ? 'o print' : 'a mensagem'} com Inteligência Artificial...</h3>
+          <p>Aguarde alguns segundos.</p>
+        </div>
+      `;
+      resultDiv.classList.remove('hidden');
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/analisar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: rawText,
+            image_base64: uploadedImageBase64,
+            mime_type: uploadedImageMime
+          }),
+          signal: AbortSignal.timeout(45000)
+        });
+
+        if (!response.ok) throw new Error("Falha na API");
+        const data = await response.json();
+
+        let boxClass = "alert-success";
+        let icon = "✅";
+        if (data.nivel_risco === "ALTO") {
+          boxClass = "alert-danger";
+          icon = "🚨";
+        } else if (data.nivel_risco === "MEDIO") {
+          boxClass = "alert-warning";
+          icon = "⚠️";
+        }
+
+        const safeSpeech = data.texto_para_audio.replace(/'/g, "");
+
+        resultDiv.innerHTML = `
+          <div class="alert-box ${boxClass}">
+            <h3>${icon} ${data.titulo_alerta}</h3>
+            <ul class="checklist">
+              ${data.sinais_alerta.map(s => `<li>${s}</li>`).join('')}
+            </ul>
+            <p><strong>O que fazer agora:</strong> ${data.acao_recomendada}</p>
+            <button class="btn btn-audio" onclick="speakText('${safeSpeech}')">
+              🔊 Ouvir explicação em voz alta
+            </button>
+          </div>
+        `;
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <div class="alert-box alert-warning">
+            <h3>⚠️ Sem conexão com a Inteligência Artificial</h3>
+            <p>Não foi possível conectar ao servidor agora. Na dúvida, <strong>nunca clique em links</strong> e ligue diretamente para seu banco ou familiar.</p>
+          </div>
+        `;
+      }
+    }
+
+    // ==========================================
+    // 6. REGISTRO DO PWA (SERVICE WORKER)
+    // ==========================================
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(() => console.log('PWA registrado com sucesso!'))
+          .catch((err) => console.error('Erro ao registrar PWA:', err));
+      });
+    }
+  </script>
+</body>
+</html>
