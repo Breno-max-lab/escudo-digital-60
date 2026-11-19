@@ -3,19 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Escudo Digital 60+ — Protótipo PET-IEG / UFOPA</title>
+  <title>Escudo Digital 60+ — PET-IEG / UFOPA</title>
   <link rel="manifest" href="./manifest.json" />
-  <meta name="theme-color" content="#0f4c81" />
+  <meta name="theme-color" content="#0b3b66" />
   <link rel="icon" type="image/svg+xml" href="./icon.svg" />
   <link rel="apple-touch-icon" href="./icon.svg" />
+  
+  <!-- Tipografia Moderna e Altamente Legível -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
   <style>
     :root {
-      --bg-page: #f4f6f9;
+      --bg-page: #eef2f6;
       --bg-card: #ffffff;
-      --text-main: #111827;
-      --text-muted: #374151;
-      --primary: #0f4c81;
-      --primary-hover: #0a355c;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --primary: #0b3b66;
+      --primary-light: #e0f2fe;
+      --primary-gradient: linear-gradient(135deg, #0b3b66 0%, #155e9e 100%);
+      --accent-teal: #0d9488;
       --success: #15803d;
       --success-bg: #dcfce7;
       --danger: #b91c1c;
@@ -23,6 +31,7 @@
       --warning: #b45309;
       --warning-bg: #fef3c7;
       --border-color: #cbd5e1;
+      --shadow-card: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 4px 10px -2px rgba(15, 23, 42, 0.04);
       --wa-header: #075e54;
       --wa-bg: #efeae2;
       --wa-bubble: #ffffff;
@@ -35,7 +44,9 @@
       --text-main: #ffffff;
       --text-muted: #facc15;
       --primary: #facc15;
-      --primary-hover: #eab308;
+      --primary-light: #262626;
+      --primary-gradient: #000000;
+      --accent-teal: #facc15;
       --success: #4ade80;
       --success-bg: #052e16;
       --danger: #f87171;
@@ -43,6 +54,7 @@
       --warning: #fbbf24;
       --warning-bg: #451a03;
       --border-color: #ffffff;
+      --shadow-card: none;
       --wa-header: #000000;
       --wa-bg: #1a1a1a;
       --wa-bubble: #000000;
@@ -55,56 +67,56 @@
     }
 
     body {
-      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: 'Plus Jakarta Sans', 'Segoe UI', Roboto, sans-serif;
       background-color: var(--bg-page);
       color: var(--text-main);
-      font-size: calc(20px * var(--font-scale));
-      line-height: 1.5;
-      padding-bottom: 40px;
+      font-size: calc(19px * var(--font-scale));
+      line-height: 1.55;
+      padding-bottom: 48px;
       transition: background-color 0.2s, color 0.2s;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* Barra Superior de Acessibilidade */
+    /* Barra Superior de Acessibilidade Refinada */
     .a11y-bar {
-      background-color: var(--primary);
+      background: var(--primary-gradient);
       color: #ffffff;
-      padding: 12px 16px;
+      padding: 10px 14px;
       position: sticky;
       top: 0;
       z-index: 100;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.18);
     }
 
     body.high-contrast .a11y-bar {
-      background-color: #000000;
+      background: #000000;
       border-bottom: 3px solid #facc15;
     }
 
     .a11y-controls {
-      max-width: 680px;
+      max-width: 640px;
       margin: 0 auto;
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 10px;
-      justify-content: space-between;
-      flex-wrap: wrap;
     }
 
     .a11y-btn {
-      flex: 1;
-      min-width: 140px;
-      min-height: 52px;
-      padding: 10px 14px;
-      font-size: calc(17px * var(--font-scale));
+      min-height: 48px;
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: calc(15px * var(--font-scale));
       font-weight: 700;
-      border: 2px solid #ffffff;
-      border-radius: 10px;
-      background-color: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.65);
+      border-radius: 12px;
+      background-color: rgba(255,255,255,0.14);
       color: #ffffff;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 6px;
+      white-space: nowrap;
     }
 
     body.high-contrast .a11y-btn {
@@ -114,56 +126,172 @@
     }
 
     .a11y-btn:active {
-      transform: scale(0.98);
+      transform: scale(0.97);
     }
 
     /* Container Principal */
     .container {
-      max-width: 680px;
-      margin: 20px auto;
+      max-width: 640px;
+      margin: 18px auto;
       padding: 0 16px;
     }
 
     .card {
       background-color: var(--bg-card);
-      border: 2px solid var(--border-color);
-      border-radius: 16px;
-      padding: 24px;
+      border: 1px solid var(--border-color);
+      border-radius: 22px;
+      padding: 24px 20px;
       margin-bottom: 20px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+      box-shadow: var(--shadow-card);
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    body.high-contrast .card {
+      border-width: 3px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cabeçalho Hero da Tela Inicial */
+    .hero-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .hero-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 10px rgba(11, 59, 102, 0.2);
+    }
+
+    .inst-tag {
+      display: inline-block;
+      font-size: calc(13px * var(--font-scale));
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--primary);
+      background-color: var(--primary-light);
+      padding: 3px 10px;
+      border-radius: 8px;
+      margin-bottom: 4px;
     }
 
     h1 {
-      font-size: calc(28px * var(--font-scale));
-      line-height: 1.25;
-      margin-bottom: 12px;
-      color: var(--primary);
+      font-size: calc(26px * var(--font-scale));
+      font-weight: 800;
+      line-height: 1.2;
+      color: var(--text-main);
     }
 
     h2 {
-      font-size: calc(24px * var(--font-scale));
-      line-height: 1.3;
-      margin-bottom: 12px;
+      font-size: calc(23px * var(--font-scale));
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 10px;
+      color: var(--text-main);
     }
 
     p {
       margin-bottom: 16px;
+      color: var(--text-muted);
     }
 
-    /* Botões Grandes e Acessíveis */
+    body.high-contrast p {
+      color: var(--text-main);
+    }
+
+    /* Cartões de Ação Principais (Menu Inicial) */
+    .action-card {
+      width: 100%;
+      padding: 18px;
+      border-radius: 16px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      text-align: left;
+      margin-bottom: 14px;
+      font-family: inherit;
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+
+    .action-card:active {
+      transform: scale(0.98);
+    }
+
+    .action-card-primary {
+      background: var(--primary-gradient);
+      color: #ffffff;
+      box-shadow: 0 6px 16px rgba(11, 59, 102, 0.25);
+    }
+
+    body.high-contrast .action-card-primary {
+      background: #facc15;
+      color: #000000;
+    }
+
+    .action-card-secondary {
+      background-color: var(--bg-card);
+      border-color: var(--primary);
+      color: var(--text-main);
+    }
+
+    .action-emoji {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background-color: rgba(255,255,255,0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      flex-shrink: 0;
+    }
+
+    .action-card-secondary .action-emoji {
+      background-color: var(--primary-light);
+    }
+
+    .action-title {
+      display: block;
+      font-size: calc(19px * var(--font-scale));
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 3px;
+    }
+
+    .action-desc {
+      display: block;
+      font-size: calc(15px * var(--font-scale));
+      font-weight: 500;
+      opacity: 0.9;
+      line-height: 1.3;
+    }
+
+    /* Botões Padrão */
     .btn {
       width: 100%;
-      min-height: 64px;
-      padding: 16px 20px;
-      font-size: calc(20px * var(--font-scale));
+      min-height: 60px;
+      padding: 14px 18px;
+      font-family: inherit;
+      font-size: calc(18px * var(--font-scale));
       font-weight: 700;
-      border-radius: 12px;
+      border-radius: 14px;
       border: 2px solid transparent;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
+      gap: 10px;
       margin-bottom: 14px;
       text-align: center;
       transition: transform 0.1s;
@@ -174,27 +302,33 @@
     }
 
     .btn-primary {
-      background-color: var(--primary);
+      background: var(--primary-gradient);
       color: #ffffff;
+      box-shadow: 0 4px 12px rgba(11, 59, 102, 0.2);
     }
 
     body.high-contrast .btn-primary {
-      background-color: #facc15;
+      background: #facc15;
       color: #000000;
     }
 
     .btn-secondary {
       background-color: transparent;
-      border-color: var(--primary);
-      color: var(--primary);
+      border-color: var(--border-color);
+      color: var(--text-main);
+    }
+
+    body.high-contrast .btn-secondary {
+      border-color: #facc15;
+      color: #facc15;
     }
 
     .btn-audio {
-      background-color: #e0f2fe;
-      border-color: #0284c7;
-      color: #0369a1;
-      min-height: 56px;
-      font-size: calc(18px * var(--font-scale));
+      background-color: var(--primary-light);
+      border-color: #bae6fd;
+      color: var(--primary);
+      min-height: 54px;
+      font-size: calc(17px * var(--font-scale));
     }
 
     body.high-contrast .btn-audio {
@@ -205,24 +339,55 @@
 
     .btn-option {
       background-color: var(--bg-card);
-      border: 3px solid var(--primary);
+      border: 2px solid var(--primary);
       color: var(--text-main);
       justify-content: flex-start;
       text-align: left;
       line-height: 1.35;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
     }
 
-    .btn-option:hover {
-      background-color: rgba(15, 76, 129, 0.08);
+    /* Barra de Progresso do Simulador */
+    .progress-wrap {
+      margin-bottom: 16px;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: calc(14px * var(--font-scale));
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      background-color: var(--primary-light);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary-gradient);
+      border-radius: 99px;
+      transition: width 0.3s ease;
+    }
+
+    body.high-contrast .progress-fill {
+      background: #facc15;
     }
 
     /* Simulação de Tela de Celular / WhatsApp */
     .phone-sim {
-      border: 3px solid #334155;
-      border-radius: 18px;
+      border: 2px solid #cbd5e1;
+      border-radius: 20px;
       overflow: hidden;
       margin: 18px 0;
       background-color: var(--wa-bg);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
 
     body.high-contrast .phone-sim {
@@ -232,7 +397,7 @@
     .wa-top {
       background-color: var(--wa-header);
       color: #ffffff;
-      padding: 14px 16px;
+      padding: 12px 16px;
       display: flex;
       align-items: center;
       gap: 12px;
@@ -247,7 +412,7 @@
       width: 44px;
       height: 44px;
       border-radius: 50%;
-      background-color: #cbd5e1;
+      background-color: #e2e8f0;
       color: #1e293b;
       display: flex;
       align-items: center;
@@ -257,23 +422,22 @@
     }
 
     .wa-body {
-      padding: 18px;
+      padding: 16px;
     }
 
     .wa-msg {
       background-color: var(--wa-bubble);
       color: var(--text-main);
-      padding: 16px;
-      border-radius: 0 14px 14px 14px;
-      border: 1px solid var(--border-color);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      margin-bottom: 10px;
+      padding: 15px;
+      border-radius: 0 16px 16px 16px;
+      border: 1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
     }
 
     .wa-time {
       display: block;
       text-align: right;
-      font-size: calc(14px * var(--font-scale));
+      font-size: calc(13px * var(--font-scale));
       color: var(--text-muted);
       margin-top: 6px;
     }
@@ -281,8 +445,8 @@
     /* Caixas de Resultado e Alerta */
     .alert-box {
       padding: 20px;
-      border-radius: 14px;
-      border: 3px solid;
+      border-radius: 16px;
+      border: 2px solid;
       margin-bottom: 18px;
     }
 
@@ -305,7 +469,7 @@
     }
 
     .checklist {
-      padding-left: 24px;
+      padding-left: 22px;
       margin: 12px 0 18px 0;
     }
 
@@ -315,42 +479,54 @@
 
     textarea {
       width: 100%;
-      min-height: 130px;
+      min-height: 120px;
       padding: 16px;
-      font-size: calc(19px * var(--font-scale));
+      font-size: calc(18px * var(--font-scale));
       font-family: inherit;
-      border-radius: 12px;
-      border: 3px solid var(--border-color);
+      border-radius: 14px;
+      border: 2px solid var(--border-color);
       background-color: var(--bg-card);
       color: var(--text-main);
       margin-bottom: 14px;
     }
 
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: calc(14px * var(--font-scale));
+      font-weight: 700;
+      margin: 16px 0;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .divider:not(:empty)::before { margin-right: 12px; }
+    .divider:not(:empty)::after { margin-left: 12px; }
+
     .hidden {
       display: none !important;
     }
 
-    .badge {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: calc(15px * var(--font-scale));
-      font-weight: 700;
-      background-color: var(--primary);
-      color: #ffffff;
-      margin-bottom: 10px;
-    }
-
-    body.high-contrast .badge {
-      background-color: #facc15;
-      color: #000000;
-    }
-
     footer {
       text-align: center;
-      font-size: calc(15px * var(--font-scale));
+      font-size: calc(14px * var(--font-scale));
       color: var(--text-muted);
-      margin-top: 24px;
+      margin-top: 20px;
+    }
+
+    footer strong {
+      color: var(--primary);
     }
   </style>
 </head>
@@ -359,11 +535,11 @@
   <!-- Barra de Acessibilidade Fixa -->
   <header class="a11y-bar" aria-label="Controles de Acessibilidade">
     <div class="a11y-controls">
-      <button class="a11y-btn" onclick="toggleFontSize()" aria-label="Aumentar ou diminuir tamanho da letra">
-        🔍 Tamanho da Letra (<span id="font-label">Normal</span>)
+      <button class="a11y-btn" onclick="toggleFontSize()" aria-label="Alterar tamanho da letra">
+        🔍 Letra: <span id="font-label">Normal</span>
       </button>
       <button class="a11y-btn" onclick="toggleContrast()" aria-label="Ativar ou desativar alto contraste">
-        🌓 Alto Contraste
+        🌓 Contraste
       </button>
     </div>
   </header>
@@ -372,26 +548,49 @@
 
     <!-- TELA 1: INÍCIO -->
     <section id="screen-home" class="card">
-      <span class="badge">PET-IEG • UFOPA Santarém</span>
-      <h1>Escudo Digital 60+</h1>
-      <p>Aprenda a identificar golpes no celular sem medo de errar e verifique mensagens suspeitas de forma simples.</p>
+      <div class="hero-header">
+        <img src="./icon.svg" alt="Escudo Digital" class="hero-icon" />
+        <div>
+          <span class="inst-tag">PET-IEG • UFOPA Santarém</span>
+          <h1>Escudo Digital 60+</h1>
+        </div>
+      </div>
 
-      <button class="btn btn-audio" onclick="speakText('Bem-vindo ao Escudo Digital 60 mais. Escolha uma das opções abaixo: Treinar com Simulador de Golpes ou Verificar Mensagem Suspeita.')">
+      <p>Sua ferramenta gratuita de proteção contra golpes no celular. Treine sem medo ou analise uma mensagem suspeita agora.</p>
+
+      <button class="btn btn-audio" onclick="speakText('Bem-vindo ao Escudo Digital 60 mais. Escolha uma das opções abaixo: Treinar no Simulador de Golpes ou Verificar Mensagem Suspeita.')">
         🔊 Ouvir explicação desta tela
       </button>
 
-      <button class="btn btn-primary" onclick="startSimulator(0)">
-        🛡️ 1. Treinar com Simulador de Golpes
+      <button class="action-card action-card-primary" onclick="startSimulator(0)">
+        <span class="action-emoji">🛡️</span>
+        <span>
+          <span class="action-title">1. Simulador de Golpes</span>
+          <span class="action-desc">Pratique com exemplos reais do WhatsApp e SMS</span>
+        </span>
       </button>
 
-      <button class="btn btn-secondary" onclick="showScreen('screen-detective')">
-        🔎 2. Verificar Mensagem Suspeita
+      <button class="action-card action-card-secondary" onclick="showScreen('screen-detective')">
+        <span class="action-emoji">🔎</span>
+        <span>
+          <span class="action-title">2. Detetive de Mensagens</span>
+          <span class="action-desc">Envie um print ou texto para verificar se é golpe</span>
+        </span>
       </button>
     </section>
 
     <!-- TELA 2: SIMULADOR DE GOLPES -->
     <section id="screen-sim" class="card hidden">
-      <span class="badge" id="sim-progress">Cenário 1 de 2</span>
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span id="sim-progress">Cenário 1 de 2</span>
+          <span>Treino Prático</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="sim-progress-bar" style="width: 50%;"></div>
+        </div>
+      </div>
+
       <h2 id="sim-title">Título do Cenário</h2>
       <p id="sim-context">Contexto da situação.</p>
 
@@ -405,7 +604,7 @@
           <div class="wa-avatar" id="sim-avatar">?</div>
           <div>
             <div id="sim-sender">Número Desconhecido</div>
-            <div style="font-size: 0.8em; font-weight: 400;" id="sim-subsender">online</div>
+            <div style="font-size: 0.8em; font-weight: 400; opacity: 0.9;" id="sim-subsender">online</div>
           </div>
         </div>
         <div class="wa-body">
@@ -416,10 +615,10 @@
         </div>
       </div>
 
-      <p><strong>O que você faria nessa situação?</strong></p>
+      <p style="color: var(--text-main);"><strong>O que você faria nessa situação?</strong></p>
       <div id="sim-options"></div>
 
-      <button class="btn btn-secondary" style="margin-top: 10px;" onclick="goHome()">
+      <button class="btn btn-secondary" style="margin-top: 8px;" onclick="goHome()">
         ⬅️ Voltar ao Início
       </button>
     </section>
@@ -428,10 +627,10 @@
     <section id="screen-feedback" class="card hidden">
       <div id="feedback-box" class="alert-box">
         <h2 id="feedback-heading">Resultado</h2>
-        <p id="feedback-summary">Explicação principal.</p>
+        <p id="feedback-summary" style="color: var(--text-main); margin-bottom: 0;">Explicação principal.</p>
       </div>
 
-      <h3>Sinais de alerta para lembrar:</h3>
+      <h3 style="margin-bottom: 8px;">Sinais de alerta para lembrar:</h3>
       <ul class="checklist" id="feedback-tips"></ul>
 
       <button class="btn btn-audio" onclick="speakFeedback()">
@@ -449,29 +648,29 @@
 
     <!-- TELA 4: DETETIVE DE GOLPES (TEXTO + PRINT DE TELA) -->
     <section id="screen-detective" class="card hidden">
-      <span class="badge">Detetive com Inteligência Artificial</span>
+      <span class="inst-tag">Inteligência Artificial • LGPD Segura</span>
       <h2>Detetive de Golpes</h2>
-      <p>Envie um <strong>print (foto) da conversa</strong> ou cole o texto da mensagem suspeita abaixo:</p>
+      <p>Envie um <strong>print (foto) da conversa</strong> ou cole o texto abaixo para verificar se é seguro:</p>
 
       <!-- Botão Grande para Escolher Print da Galeria -->
       <input type="file" id="image-input" accept="image/*" class="hidden" onchange="handleImageUpload(event)" />
-      <button class="btn btn-primary" style="background-color: #0369a1;" onclick="document.getElementById('image-input').click()">
-        📷 Enviar Print (Foto) da Mensagem
+      <button class="btn btn-primary" style="background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);" onclick="document.getElementById('image-input').click()">
+        📷 Escolher Print (Foto) da Galeria
       </button>
 
       <!-- Pré-visualização do Print Selecionado -->
-      <div id="image-preview-container" class="hidden" style="margin-bottom: 16px; text-align: center; border: 2px dashed var(--primary); padding: 12px; border-radius: 12px;">
-        <p style="font-weight: 700; margin-bottom: 8px;">✅ Print carregado com sucesso:</p>
-        <img id="image-preview" src="" alt="Prévia do print selecionado" style="max-width: 100%; max-height: 260px; border-radius: 8px; border: 1px solid var(--border-color);" />
-        <button class="btn btn-secondary" style="margin-top: 10px; min-height: 48px;" onclick="clearUploadedImage()">
+      <div id="image-preview-container" class="hidden" style="margin-bottom: 16px; text-align: center; border: 2px dashed var(--primary); padding: 14px; border-radius: 16px; background-color: var(--primary-light);">
+        <p style="font-weight: 700; color: var(--primary); margin-bottom: 10px;">✅ Print carregado com sucesso:</p>
+        <img id="image-preview" src="" alt="Prévia do print selecionado" style="max-width: 100%; max-height: 260px; border-radius: 10px; border: 1px solid var(--border-color);" />
+        <button class="btn btn-secondary" style="margin-top: 12px; min-height: 48px; background-color: var(--bg-card);" onclick="clearUploadedImage()">
           🗑️ Remover esta foto
         </button>
       </div>
 
-      <p style="text-align: center; font-weight: 700; margin: 10px 0;">— OU digite/cole o texto —</p>
+      <div class="divider">OU COLE O TEXTO</div>
 
       <button class="btn btn-secondary" onclick="fillExampleMessage()">
-        📋 Testar com um exemplo de texto pronto
+        📋 Testar com um exemplo de golpe
       </button>
 
       <label for="suspect-input" style="display:block; font-weight:700; margin-bottom:8px;">
@@ -491,13 +690,13 @@
     </section>
 
     <footer>
-      Protótipo Funcional (PWA) • Projeto PET-IEG / UFOPA
+      Extensão Tecnológica • <strong>PET-IEG / UFOPA</strong> • Santarém - PA
     </footer>
   </main>
 
   <script>
     // ==========================================
-    // 1. DADOS DOS CENÁRIOS (JSON DECLARATIVO)
+    // 1. DADOS DOS CENÁRIOS
     // ==========================================
     const scenarios = [
       {
@@ -563,7 +762,7 @@
     ];
 
     let currentScenarioIdx = 0;
-    let currentFontLevel = 0; // 0 = Normal, 1 = Grande, 2 = Extra Grande
+    let currentFontLevel = 0;
     let lastFeedbackSpeech = "";
 
     // ==========================================
@@ -571,7 +770,7 @@
     // ==========================================
     function toggleFontSize() {
       currentFontLevel = (currentFontLevel + 1) % 3;
-      const scales = [1, 1.2, 1.4];
+      const scales = [1, 1.18, 1.35];
       const labels = ["Normal", "Grande", "Gigante"];
       document.documentElement.style.setProperty('--font-scale', scales[currentFontLevel]);
       document.getElementById('font-label').innerText = labels[currentFontLevel];
@@ -627,6 +826,9 @@
       const sc = scenarios[idx];
 
       document.getElementById('sim-progress').innerText = `Cenário ${idx + 1} de ${scenarios.length}`;
+      const percent = Math.round(((idx + 1) / scenarios.length) * 100);
+      document.getElementById('sim-progress-bar').style.width = `${percent}%`;
+
       document.getElementById('sim-title').innerText = sc.title;
       document.getElementById('sim-context').innerText = sc.context;
       document.getElementById('sim-avatar').innerText = sc.avatar;
@@ -747,7 +949,7 @@
       resultDiv.innerHTML = `
         <div class="alert-box alert-warning">
           <h3>⏳ Analisando ${uploadedImageBase64 ? 'o print' : 'a mensagem'} com Inteligência Artificial...</h3>
-          <p>Aguarde alguns segundos.</p>
+          <p style="color: var(--text-main); margin-bottom: 0;">Aguarde alguns segundos.</p>
         </div>
       `;
       resultDiv.classList.remove('hidden');
@@ -785,7 +987,7 @@
             <ul class="checklist">
               ${data.sinais_alerta.map(s => `<li>${s}</li>`).join('')}
             </ul>
-            <p><strong>O que fazer agora:</strong> ${data.acao_recomendada}</p>
+            <p style="color: var(--text-main);"><strong>O que fazer agora:</strong> ${data.acao_recomendada}</p>
             <button class="btn btn-audio" onclick="speakText('${safeSpeech}')">
               🔊 Ouvir explicação em voz alta
             </button>
@@ -795,7 +997,7 @@
         resultDiv.innerHTML = `
           <div class="alert-box alert-warning">
             <h3>⚠️ Sem conexão com a Inteligência Artificial</h3>
-            <p>Não foi possível conectar ao servidor agora. Na dúvida, <strong>nunca clique em links</strong> e ligue diretamente para seu banco ou familiar.</p>
+            <p style="color: var(--text-main); margin-bottom: 0;">Não foi possível conectar ao servidor agora. Na dúvida, <strong>nunca clique em links</strong> e ligue diretamente para seu banco ou familiar.</p>
           </div>
         `;
       }
