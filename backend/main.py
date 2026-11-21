@@ -24,8 +24,8 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 
 app = FastAPI(
     title="Escudo Digital 60+ API",
-    description="Backend multimodal com proteção LGPD e voz neural para inclusão digital de idosos.",
-    version="2.2.0"
+    description="Backend multimodal com proteção LGPD e voz neural instantânea para inclusão digital de idosos.",
+    version="2.3.0"
 )
 
 app.add_middleware(
@@ -142,12 +142,23 @@ async def analisar_mensagem(req: AnalyzeRequest):
     raise HTTPException(status_code=502, detail=f"Falha ao consultar modelos de IA: {str(last_error)}")
 
 
+AUDIO_CACHE = {}
+
+
 @app.get("/falar")
 async def gerar_audio_stream(text: str = Query(..., min_length=1, max_length=1500)):
     texto_limpo = text.strip()
+
+    if texto_limpo in AUDIO_CACHE:
+        return StreamingResponse(
+            io.BytesIO(AUDIO_CACHE[texto_limpo]),
+            media_type="audio/mpeg",
+            headers={"Cache-Control": "public, max-age=86400"}
+        )
+
     audio_buffer = io.BytesIO()
 
-    # 1ª Tentativa: Voz Neural Francisca (Microsoft Edge Neural - qualidade humana)
+    # 1ª Tentativa: Voz Neural Francisca (Microsoft Edge Neural)
     try:
         communicate = edge_tts.Communicate(
             texto_limpo,
@@ -159,8 +170,14 @@ async def gerar_audio_stream(text: str = Query(..., min_length=1, max_length=150
                 audio_buffer.write(chunk["data"])
 
         if audio_buffer.tell() > 0:
-            audio_buffer.seek(0)
-            return StreamingResponse(audio_buffer, media_type="audio/mpeg")
+            audio_bytes = audio_buffer.getvalue()
+            if len(AUDIO_CACHE) < 100:
+                AUDIO_CACHE[texto_limpo] = audio_bytes
+            return StreamingResponse(
+                io.BytesIO(audio_bytes),
+                media_type="audio/mpeg",
+                headers={"Cache-Control": "public, max-age=86400"}
+            )
     except Exception:
         pass
 
@@ -169,7 +186,13 @@ async def gerar_audio_stream(text: str = Query(..., min_length=1, max_length=150
         audio_buffer = io.BytesIO()
         tts = gTTS(text=texto_limpo, lang="pt", tld="com.br", slow=False)
         tts.write_to_fp(audio_buffer)
-        audio_buffer.seek(0)
-        return StreamingResponse(audio_buffer, media_type="audio/mpeg")
+        audio_bytes = audio_buffer.getvalue()
+        if len(AUDIO_CACHE) < 100:
+            AUDIO_CACHE[texto_limpo] = audio_bytes
+        return StreamingResponse(
+            io.BytesIO(audio_bytes),
+            media_type="audio/mpeg",
+            headers={"Cache-Control": "public, max-age=86400"}
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao gerar áudio: {str(e)}")

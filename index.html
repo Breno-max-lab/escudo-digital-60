@@ -589,7 +589,6 @@
 </head>
 <body>
 
-  <!-- Player de Áudio Nativo Oculto (Garante reprodução direta em qualquer tela no Android/iOS) -->
   <audio id="tts-player" preload="none"></audio>
 
   <header class="a11y-bar" aria-label="Controles de Acessibilidade">
@@ -617,7 +616,7 @@
 
       <p>Sua ferramenta gratuita de proteção contra golpes no celular. Treine sem medo, analise mensagens ou peça ajuda rápida.</p>
 
-      <button class="btn btn-audio" onclick="speakText('Bem-vindo ao Escudo Digital 60+. Escolha uma das três opções abaixo: 1, Simulador de Golpes. 2, Detetive de Mensagens. 3, Emergência e Telefones Oficiais.', this)">
+      <button class="btn btn-audio" onclick="speakText(HOME_SPEECH, this)">
         🔊 Ouvir explicação desta tela
       </button>
 
@@ -964,10 +963,40 @@
     let lastFeedbackSpeech = "";
 
     // ==========================================
-    // 2. ACESSIBILIDADE E ÁUDIO STREAMING DIRETO
+    // 2. ACESSIBILIDADE E ÁUDIO INSTANTÂNEO (PRE-FETCH)
     // ==========================================
     const ttsPlayer = document.getElementById('tts-player');
+    const audioBlobCache = {};
     let activeAudioBtn = null;
+
+    const HOME_SPEECH = "Bem-vindo ao Escudo Digital 60+. Escolha uma das três opções abaixo: 1, Simulador de Golpes. 2, Detetive de Mensagens. 3, Emergência e Telefones Oficiais.";
+    const EMERGENCY_SPEECH = "Orientações de emergência caso tenha caído em um golpe. Passo 1: Ligue imediatamente para o seu banco usando o número atrás do cartão e peça o bloqueio e a devolução do Pix. Passo 2: Tire prints da conversa e guarde o comprovante. Passo 3: Registre um Boletim de Ocorrência. Abaixo você pode tocar nos botões para ligar direto para a Polícia no 190, INSS no 135 ou Banco Central no 145.";
+
+    function formatSpeechText(text) {
+      return text
+        .replace(/https?:\/\/[^\s]+/g, 'endereço de internet suspeito')
+        .replace(/•/g, '.')
+        .replace(/60\+/g, '60 mais')
+        .replace(/R\$\s?(\d+)\.?(\d*),(\d+)/g, '$1$2 reais e $3 centavos')
+        .replace(/R\$\s?(\d+)\.?(\d*)/g, '$1$2 reais')
+        .replace(/,00 reais/g, ' reais')
+        .trim();
+    }
+
+    async function preloadSpeech(text) {
+      const cleanText = formatSpeechText(text);
+      if (audioBlobCache[cleanText]) return;
+
+      try {
+        const streamUrl = `https://escudo-digital-60.onrender.com/falar?text=${encodeURIComponent(cleanText)}`;
+        const res = await fetch(streamUrl);
+        if (!res.ok) return;
+        const blob = await res.blob();
+        audioBlobCache[cleanText] = URL.createObjectURL(blob);
+      } catch (_) {
+        // Silencioso: tenta novamente no clique se necessário
+      }
+    }
 
     function resetAudioBtn() {
       if (activeAudioBtn) {
@@ -978,8 +1007,6 @@
 
     function stopAllAudio() {
       ttsPlayer.pause();
-      ttsPlayer.removeAttribute('src');
-      ttsPlayer.load();
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
       }
@@ -1015,25 +1042,20 @@
         if (!btnElement.dataset.originalText) {
           btnElement.dataset.originalText = btnElement.innerText;
         }
-        btnElement.innerText = "⏳ Carregando voz...";
         activeAudioBtn = btnElement;
       }
 
-      // Limpa URLs e símbolos para leitura natural sem quebrar o parâmetro GET
-      const cleanText = text
-        .replace(/https?:\/\/[^\s]+/g, 'endereço de internet suspeito')
-        .replace(/•/g, '.')
-        .replace(/60\+/g, '60 mais')
-        .replace(/R\$\s?(\d+)\.?(\d*),(\d+)/g, '$1$2 reais e $3 centavos')
-        .replace(/R\$\s?(\d+)\.?(\d*)/g, '$1$2 reais')
-        .replace(/,00 reais/g, ' reais')
-        .trim();
-
+      const cleanText = formatSpeechText(text);
+      const cachedUrl = audioBlobCache[cleanText];
       const streamUrl = `https://escudo-digital-60.onrender.com/falar?text=${encodeURIComponent(cleanText)}`;
+
+      if (activeAudioBtn) {
+        activeAudioBtn.innerText = cachedUrl ? "🔊 Falando..." : "⏳ Preparando voz...";
+      }
 
       ttsPlayer.onplaying = () => {
         if (activeAudioBtn) {
-          activeAudioBtn.innerText = "🔊 Falando... (toque para parar)";
+          activeAudioBtn.innerText = "🔊 Falando...";
         }
       };
 
@@ -1045,20 +1067,26 @@
         fallbackBrowserSpeech(cleanText);
       };
 
-      // Inicia o streaming diretamente no clique do usuário (nunca é bloqueado pelo Android/iOS)
-      ttsPlayer.src = streamUrl;
+      ttsPlayer.src = cachedUrl || streamUrl;
       const playPromise = ttsPlayer.play();
       if (playPromise !== undefined) {
         playPromise.catch(() => {
           fallbackBrowserSpeech(cleanText);
         });
       }
+
+      if (!cachedUrl) {
+        preloadSpeech(text);
+      }
+    }
+
+    function getScenarioSpeechText(idx) {
+      const sc = scenarios[idx];
+      return `${sc.title}. ${sc.context}. A mensagem diz: ${sc.message}. O que você faria nessa situação?`;
     }
 
     function speakCurrentScenario(btn) {
-      const sc = scenarios[currentScenarioIdx];
-      const fullText = `${sc.title}. ${sc.context}. A mensagem diz: ${sc.message}. O que você faria nessa situação?`;
-      speakText(fullText, btn);
+      speakText(getScenarioSpeechText(currentScenarioIdx), btn);
     }
 
     function speakFeedback(btn) {
@@ -1066,12 +1094,11 @@
     }
 
     function speakEmergency(btn) {
-      const text = "Orientações de emergência caso tenha caído em um golpe. Passo 1: Ligue imediatamente para o seu banco usando o número atrás do cartão e peça o bloqueio e a devolução do Pix. Passo 2: Tire prints da conversa e guarde o comprovante. Passo 3: Registre um Boletim de Ocorrência. Abaixo você pode tocar nos botões para ligar direto para a Polícia no 190, INSS no 135 ou Banco Central no 145.";
-      speakText(text, btn);
+      speakText(EMERGENCY_SPEECH, btn);
     }
 
     // ==========================================
-    // 3. NAVEGAÇÃO ENTRE TELAS
+    // 3. NAVEGAÇÃO ENTRE TELAS E PRÉ-CARREGAMENTO
     // ==========================================
     function showScreen(screenId) {
       stopAllAudio();
@@ -1080,11 +1107,26 @@
       });
       document.getElementById(screenId).classList.remove('hidden');
       window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      if (screenId === 'screen-home') {
+        preloadSpeech(HOME_SPEECH);
+      } else if (screenId === 'screen-sim') {
+        preloadSpeech(getScenarioSpeechText(currentScenarioIdx));
+      } else if (screenId === 'screen-feedback' && lastFeedbackSpeech) {
+        preloadSpeech(lastFeedbackSpeech);
+      } else if (screenId === 'screen-emergency') {
+        preloadSpeech(EMERGENCY_SPEECH);
+      }
     }
 
     function goHome() {
       showScreen('screen-home');
     }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      fetch("https://escudo-digital-60.onrender.com/").catch(() => {});
+      preloadSpeech(HOME_SPEECH);
+    });
 
     // ==========================================
     // 4. LÓGICA DO SIMULADOR
@@ -1236,6 +1278,8 @@
 
         if (!response.ok) throw new Error("Falha na API");
         const data = await response.json();
+
+        preloadSpeech(data.texto_para_audio);
 
         let boxClass = "alert-success";
         let icon = "✅";

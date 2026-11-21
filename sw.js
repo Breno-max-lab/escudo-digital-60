@@ -1,4 +1,4 @@
-const CACHE_NAME = 'escudo-digital-v7';
+const CACHE_NAME = 'escudo-digital-v8';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
