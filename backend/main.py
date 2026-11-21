@@ -3,7 +3,7 @@ import re
 import io
 import json
 import base64
-import edge_tts
+from gtts import gTTS
 from typing import Optional, List
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,8 +23,8 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 
 app = FastAPI(
     title="Escudo Digital 60+ API",
-    description="Backend multimodal com proteção LGPD e síntese de voz neural para inclusão digital de idosos.",
-    version="2.0.0"
+    description="Backend multimodal com proteção LGPD e síntese de voz natural para inclusão digital de idosos.",
+    version="2.1.0"
 )
 
 app.add_middleware(
@@ -169,18 +169,10 @@ async def gerar_audio_neural(req: SpeechRequest):
         raise HTTPException(status_code=400, detail="Texto vazio para leitura.")
 
     try:
-        communicate = edge_tts.Communicate(
-            texto_limpo,
-            voice="pt-BR-FranciscaNeural",
-            rate="-5%"
-        )
-
+        tts = gTTS(text=texto_limpo, lang="pt", tld="com.br", slow=False)
         audio_buffer = io.BytesIO()
-        async for chunk in communicate.stream():
-            if chunk["type"] == "audio":
-                audio_buffer.write(chunk["data"])
-
+        tts.write_to_fp(audio_buffer)
         audio_buffer.seek(0)
         return StreamingResponse(audio_buffer, media_type="audio/mpeg")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao gerar áudio neural: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar áudio: {str(e)}")

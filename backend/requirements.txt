@@ -4,4 +4,4 @@ google-genai
 python-dotenv
 pydantic
 pillow
-edge-tts
+gTTS

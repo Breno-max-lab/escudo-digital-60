@@ -624,7 +624,7 @@
 
       <p>Sua ferramenta gratuita de proteção contra golpes no celular. Treine sem medo, analise mensagens ou peça ajuda rápida.</p>
 
-      <button class="btn btn-audio" onclick="speakText('Bem-vindo ao Escudo Digital 60+. Escolha uma das três opções abaixo: 1, Simulador de Golpes. 2, Detetive de Mensagens. 3, Emergência e Telefones Oficiais.')">
+      <button class="btn btn-audio" onclick="speakText('Bem-vindo ao Escudo Digital 60+. Escolha uma das três opções abaixo: 1, Simulador de Golpes. 2, Detetive de Mensagens. 3, Emergência e Telefones Oficiais.', this)">
         🔊 Ouvir explicação desta tela
       </button>
 
@@ -668,7 +668,7 @@
       <h2 id="sim-title">Título do Cenário</h2>
       <p id="sim-context">Contexto da situação.</p>
 
-      <button class="btn btn-audio" onclick="speakCurrentScenario()">
+      <button class="btn btn-audio" onclick="speakCurrentScenario(this)">
         🔊 Ouvir esta mensagem em voz alta
       </button>
 
@@ -707,7 +707,7 @@
       <h3 style="margin-bottom: 8px;">Sinais de alerta para lembrar:</h3>
       <ul class="checklist" id="feedback-tips"></ul>
 
-      <button class="btn btn-audio" onclick="speakFeedback()">
+      <button class="btn btn-audio" onclick="speakFeedback(this)">
         🔊 Ouvir explicação
       </button>
 
@@ -769,7 +769,7 @@
       <h2>Emergência e Telefones</h2>
       <p>Se você caiu em um golpe, clicou em um link estranho ou fez um Pix para golpistas, <strong>aja rápido</strong> seguindo estes passos:</p>
 
-      <button class="btn btn-audio" onclick="speakEmergency()">
+      <button class="btn btn-audio" onclick="speakEmergency(this)">
         🔊 Ouvir orientações de emergência
       </button>
 
@@ -974,10 +974,11 @@
     let lastFeedbackSpeech = "";
 
     // ==========================================
-    // 2. ACESSIBILIDADE (FONTE, CONTRASTE E VOZ NEURAL)
+    // 2. ACESSIBILIDADE (FONTE, CONTRASTE E VOZ NATURAL)
     // ==========================================
     let preferredVoice = null;
-    let currentAudioPlayer = null;
+    let globalAudio = new Audio();
+    let activeAudioBtn = null;
 
     function loadBestPortugueseVoice() {
       if (!('speechSynthesis' in window)) return;
@@ -1015,12 +1016,15 @@
     }
 
     function stopAllAudio() {
-      if (currentAudioPlayer) {
-        currentAudioPlayer.pause();
-        currentAudioPlayer = null;
-      }
+      globalAudio.pause();
+      globalAudio.removeAttribute('src');
+      globalAudio.load();
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
+      }
+      if (activeAudioBtn) {
+        activeAudioBtn.innerText = activeAudioBtn.dataset.originalText || "🔊 Ouvir em voz alta";
+        activeAudioBtn = null;
       }
     }
 
@@ -1052,8 +1056,20 @@
       window.speechSynthesis.speak(utterance);
     }
 
-    async function speakText(text) {
+    async function speakText(text, btnElement = null) {
       stopAllAudio();
+
+      // Destrava o áudio imediatamente dentro do evento de clique do usuário (obrigatório no Android/iOS)
+      globalAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+      globalAudio.play().catch(() => {});
+
+      if (btnElement) {
+        if (!btnElement.dataset.originalText) {
+          btnElement.dataset.originalText = btnElement.innerText;
+        }
+        btnElement.innerText = "⏳ Carregando voz...";
+        activeAudioBtn = btnElement;
+      }
 
       const cleanText = text
         .replace(/•/g, '.')
@@ -1067,35 +1083,50 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: cleanText }),
-          signal: AbortSignal.timeout(12000)
+          signal: AbortSignal.timeout(25000)
         });
 
-        if (!response.ok) throw new Error("Falha no TTS neural");
+        if (!response.ok) throw new Error("Falha na rota /falar");
 
         const audioBlob = await response.blob();
         const audioUrl = URL.createObjectURL(audioBlob);
-        currentAudioPlayer = new Audio(audioUrl);
-        currentAudioPlayer.onended = () => URL.revokeObjectURL(audioUrl);
-        await currentAudioPlayer.play();
+
+        if (activeAudioBtn) {
+          activeAudioBtn.innerText = "🔊 Falando...";
+        }
+
+        globalAudio.src = audioUrl;
+        globalAudio.onended = () => {
+          URL.revokeObjectURL(audioUrl);
+          if (activeAudioBtn) {
+            activeAudioBtn.innerText = activeAudioBtn.dataset.originalText;
+            activeAudioBtn = null;
+          }
+        };
+
+        await globalAudio.play();
       } catch (err) {
-        // Fallback offline automático se estiver sem internet ou se o servidor estiver despertando
+        if (activeAudioBtn) {
+          activeAudioBtn.innerText = activeAudioBtn.dataset.originalText;
+          activeAudioBtn = null;
+        }
         fallbackBrowserSpeech(cleanText);
       }
     }
 
-    function speakCurrentScenario() {
+    function speakCurrentScenario(btn) {
       const sc = scenarios[currentScenarioIdx];
       const fullText = `${sc.title}. ${sc.context}. A mensagem diz: ${sc.message}. O que você faria nessa situação?`;
-      speakText(fullText);
+      speakText(fullText, btn);
     }
 
-    function speakFeedback() {
-      speakText(lastFeedbackSpeech);
+    function speakFeedback(btn) {
+      speakText(lastFeedbackSpeech, btn);
     }
 
-    function speakEmergency() {
+    function speakEmergency(btn) {
       const text = "Orientações de emergência caso tenha caído em um golpe. Passo 1: Ligue imediatamente para o seu banco usando o número atrás do cartão e peça o bloqueio e a devolução do Pix. Passo 2: Tire prints da conversa e guarde o comprovante. Passo 3: Registre um Boletim de Ocorrência. Abaixo você pode tocar nos botões para ligar direto para a Polícia no 190, INSS no 135 ou Banco Central no 145.";
-      speakText(text);
+      speakText(text, btn);
     }
 
     // ==========================================
@@ -1284,7 +1315,7 @@
               ${data.sinais_alerta.map(s => `<li>${s}</li>`).join('')}
             </ul>
             <p style="color: var(--text-main);"><strong>O que fazer agora:</strong> ${data.acao_recomendada}</p>
-            <button class="btn btn-audio" onclick="speakText('${safeSpeech}')">
+            <button class="btn btn-audio" onclick="speakText('${safeSpeech}', this)">
               🔊 Ouvir explicação em voz alta
             </button>
           </div>
