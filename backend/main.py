@@ -1,167 +1,186 @@
 import os
 import re
+import io
 import json
 import base64
-from typing import Optional
-from pathlib import Path
+import edge_tts
+from typing import Optional, List
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from dotenv import load_dotenv
 
-# Carrega o arquivo .env localizado na mesma pasta do main.py
-env_path = Path(__file__).resolve().parent / ".env"
-load_dotenv(dotenv_path=env_path)
+load_dotenv()
 
-app = FastAPI(title="API Escudo Digital 60+ - PET-IEG UFOPA")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    raise RuntimeError("A variável GEMINI_API_KEY não foi encontrada no ambiente.")
+
+client = genai.Client(api_key=GEMINI_API_KEY)
+
+app = FastAPI(
+    title="Escudo Digital 60+ API",
+    description="Backend multimodal com proteção LGPD e síntese de voz neural para inclusão digital de idosos.",
+    version="2.0.0"
+)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["POST"],
+    allow_credentials=True,
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
-api_key = os.getenv("GEMINI_API_KEY")
-client = genai.Client(api_key=api_key)
 
-class MessageRequest(BaseModel):
+# ==============================================================================
+# 1. SANITIZAÇÃO LGPD (ANONIMIZAÇÃO DE DADOS SENSÍVEIS)
+# ==============================================================================
+def sanitize_pii(text: str) -> str:
+    if not text:
+        return ""
+    # Mascara CPFs (000.000.000-00 ou 11 dígitos seguidos)
+    text = re.sub(r"\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b", "[CPF_OCULTO]", text)
+    # Mascara telefones brasileiros
+    text = re.sub(r"\b(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\d{4}|\d{4})-?\d{4}\b", "[TELEFONE_OCULTO]", text)
+    # Mascara e-mails
+    text = re.sub(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", "[EMAIL_OCULTO]", text)
+    # Mascara possíveis números de cartão/conta longos
+    text = re.sub(r"\b\d{13,19}\b", "[NUMERO_CONTA_OCULTO]", text)
+    return text
+
+
+# ==============================================================================
+# 2. MODELOS DE DADOS (REQUEST / RESPONSE)
+# ==============================================================================
+class AnalyzeRequest(BaseModel):
     text: Optional[str] = ""
     image_base64: Optional[str] = None
     mime_type: Optional[str] = "image/jpeg"
 
-# ==========================================
-# CAMADA DE PRIVACIDADE (SANITIZAÇÃO LGPD)
-# ==========================================
-def sanitize_pii(text: str) -> str:
-    if not text:
-        return ""
-    text = re.sub(r'\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b', '[CPF OCULTO]', text)
-    text = re.sub(r'\(?\d{2}\)?\s?9?\d{4}-?\d{4}', '[TELEFONE OCULTO]', text)
-    text = re.sub(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', '[EMAIL OCULTO]', text)
-    text = re.sub(r'\b\d{10,}\b', '[NÚMERO OCULTO]', text)
-    return text
 
-# ==========================================
-# PROMPT DE SISTEMA (PERSONA EDUCADORA 60+)
-# ==========================================
-SYSTEM_INSTRUCTION = """
-Você é um assistente especialista em segurança digital focado em ajudar pessoas idosas (60+) no Brasil.
-Sua tarefa é analisar mensagens de texto ou capturas de tela (prints do WhatsApp, SMS, e-mail, boletos) com equilíbrio e precisão, diferenciando golpes reais de comunicações oficiais legítimas.
+class AnalyzeResponse(BaseModel):
+    nivel_risco: str  # "ALTO", "MEDIO" ou "BAIXO"
+    titulo_alerta: str
+    sinais_alerta: List[str]
+    acao_recomendada: str
+    texto_para_audio: str
 
-BASE DE CONHECIMENTO SOBRE CANAIS OFICIAIS (PARA EVITAR FALSOS POSITIVOS):
-- O Governo Federal (perfil "GovBR"), INSS, Receita Federal e bancos enviam mensagens informativas oficiais pelo WhatsApp Business.
-- COMO IDENTIFICAR UM CANAL OFICIAL LEGÍTIMO NO PRINT:
-  1. Presença do SELO AZUL DE VERIFICAÇÃO da Meta/WhatsApp ao lado do nome do perfil (ex: "GovBR" com selo azul).
-  2. Caráter puramente informativo (datas de provas, calendários, avisos gerais), sem ameaça de bloqueio imediato de conta ou multa.
-  3. Ausência de pedido de senha, código SMS, dados bancários ou transferência via Pix.
-  4. Presença de opção de descadastro oficial (ex: "digite SAIR").
-- Se a mensagem tiver selo azul de verificação e NÃO pedir dinheiro, senha ou dados pessoais, classifique como "BAIXO" (Mensagem Oficial / Segura), orientando apenas que, ao clicar nos botões, confira se o site termina em ".gov.br".
 
-REGRAS OBRIGATÓRIAS DE RESPOSTA:
-1. Use linguagem simples, acolhedora, respeitosa e direta. Evite termos técnicos em inglês.
-2. Classifique o risco estritamente como:
-   - "ALTO": Golpe claro (pedido de Pix, link suspeito fora de .gov.br ou fora do domínio oficial do banco, falso parente, ameaça urgente, perfil sem selo oficial fingindo ser banco/governo).
-   - "MEDIO": Mensagem duvidosa ou sem selo de verificação que exige cautela antes de clicar ou responder.
-   - "BAIXO": Comunicação oficial legítima (com selo de verificação e sem pedidos suspeitos) ou conversa comum segura.
-3. PRIVACIDADE (LGPD): Nunca repita nomes de pessoas físicas (ex: nome do destinatário na conversa), CPF, telefone ou chaves Pix na sua resposta.
-4. Liste no máximo 3 pontos objetivos que justificam sua análise.
-5. Dê 1 recomendação prática e segura do que a pessoa deve fazer agora.
-6. Responda EXCLUSIVAMENTE no formato JSON estruturado.
+class SpeechRequest(BaseModel):
+    text: str
+
+
+# ==============================================================================
+# 3. PROMPT CALIBRADO PARA O PÚBLICO 60+
+# ==============================================================================
+SYSTEM_PROMPT = """
+Você é o assistente de segurança digital do projeto 'Escudo Digital 60+' (PET-IEG / UFOPA, Santarém - Pará).
+Sua missão é analisar mensagens de texto ou capturas de tela (prints) de WhatsApp, SMS ou e-mail para ajudar pessoas idosas (60+) a identificarem golpes virtuais com clareza, acolhimento e linguagem simples.
+
+REGRAS IMPORTANTES DE CALIBRAÇÃO:
+1. Diferencie golpes reais de comunicações legítimas:
+   - Se a imagem mostrar um perfil comercial oficial com selo de verificação azul/verde (como GovBR, Caixa, Banco do Brasil, INSS) apenas informando datas ou serviços sem pedir senha, código SMS ou Pix imediato, classifique como risco "BAIXO" (seguro/informativo), orientando sempre a conferir se eventuais sites terminam em '.gov.br' ou abrir o app oficial diretamente.
+   - Classifique como "ALTO" quando houver pedido urgente de Pix/dinheiro para parente ou terceiro, links suspeitos que imitam bancos/governo (phishing), solicitação de senha/código de verificação, instalação de aplicativos externos ou cobrança de taxa para liberar prêmio/benefício.
+   - Classifique como "MEDIO" quando a mensagem for ambígua, de remetente desconhecido ou contiver ofertas exageradas sem pedido direto de dinheiro.
+2. Linguagem acessível:
+   - Use frases curtas, diretas e sem jargões técnicos em inglês (evite palavras como 'phishing', 'malware' ou 'spoofing'; explique o risco em português claro).
+   - O campo 'texto_para_audio' deve ser um resumo fluido, natural e acolhedor para ser lido em voz alta para um idoso.
+
+Responda EXCLUSIVAMENTE em JSON válido seguindo exatamente esta estrutura:
+{
+  "nivel_risco": "ALTO" | "MEDIO" | "BAIXO",
+  "titulo_alerta": "Título curto e claro do resultado",
+  "sinais_alerta": ["Ponto 1 observado na mensagem", "Ponto 2 observado"],
+  "acao_recomendada": "Orientação prática do que o idoso deve fazer agora",
+  "texto_para_audio": "Texto completo e natural para leitura em voz alta"
+}
 """
 
-@app.post("/analisar")
-async def analyze_scam(req: MessageRequest):
-    raw_text = (req.text or "").strip()
+
+# ==============================================================================
+# 4. ENDPOINTS DA API
+# ==============================================================================
+@app.get("/")
+def health_check():
+    return {"status": "online", "service": "Escudo Digital 60+ API"}
+
+
+@app.post("/analisar", response_model=AnalyzeResponse)
+async def analisar_mensagem(req: AnalyzeRequest):
+    clean_text = sanitize_pii(req.text or "")
     has_image = bool(req.image_base64)
 
-    if not raw_text and not has_image:
+    if not clean_text.strip() and not has_image:
         raise HTTPException(status_code=400, detail="Envie um texto ou uma imagem para análise.")
 
-    clean_text = sanitize_pii(raw_text)
+    contents = [SYSTEM_PROMPT]
 
-    # Monta o conteúdo multimodal para o Gemini
-    contents_payload = []
+    if clean_text.strip():
+        contents.append(f"Texto informado pelo usuário:\n\"\"\"{clean_text}\"\"\"")
 
     if has_image:
         try:
-            # Remove o cabeçalho "data:image/png;base64," caso venha do navegador
-            b64_data = req.image_base64.split(",")[-1]
+            b64_data = req.image_base64
+            if "," in b64_data:
+                b64_data = b64_data.split(",", 1)[1]
             image_bytes = base64.b64decode(b64_data)
-            contents_payload.append(
+            contents.append(
                 types.Part.from_bytes(
                     data=image_bytes,
-                    mime_type=req.mime_type or "image/jpeg",
+                    mime_type=req.mime_type or "image/jpeg"
                 )
             )
-        except Exception:
-            raise HTTPException(status_code=400, detail="Formato de imagem inválido.")
+            contents.append("Analise também todo o conteúdo visual, remetente, selos de verificação, links e textos presentes nesta captura de tela.")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Erro ao processar imagem enviada: {str(e)}")
 
-    if clean_text:
-        contents_payload.append(f"Analise esta mensagem recebida por um idoso:\n\n\"{clean_text}\"")
-    else:
-        contents_payload.append("Analise esta captura de tela (print) de uma mensagem recebida por um idoso e diga se há risco de golpe.")
+    # Fallback resiliente entre modelos Gemini
+    candidate_models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+    last_error = None
 
-    response_schema = {
-        "type": "OBJECT",
-        "properties": {
-            "nivel_risco": {"type": "STRING", "enum": ["ALTO", "MEDIO", "BAIXO"]},
-            "titulo_alerta": {"type": "STRING"},
-            "sinais_alerta": {"type": "ARRAY", "items": {"type": "STRING"}},
-            "acao_recomendada": {"type": "STRING"},
-            "texto_para_audio": {"type": "STRING"}
-        },
-        "required": ["nivel_risco", "titulo_alerta", "sinais_alerta", "acao_recomendada", "texto_para_audio"]
-    }
-
-    modelos_fallback = [
-        "gemini-2.5-flash-lite",
-        "gemini-3.5-flash-lite",
-        "gemini-3.7-flash",
-        "gemini-3.5-flash",
-        "gemini-3.8-flash"
-    ]
-    ultimo_erro = None
-
-    for modelo_atual in modelos_fallback:
+    for model_name in candidate_models:
         try:
             response = client.models.generate_content(
-                model=modelo_atual,
-                contents=contents_payload,
+                model=model_name,
+                contents=contents,
                 config=types.GenerateContentConfig(
-                    system_instruction=SYSTEM_INSTRUCTION,
                     response_mime_type="application/json",
-                    response_schema=response_schema,
                     temperature=0.2,
-                    safety_settings=[
-                        types.SafetySetting(
-                            category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-                            threshold=types.HarmBlockThreshold.BLOCK_NONE,
-                        ),
-                        types.SafetySetting(
-                            category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
-                            threshold=types.HarmBlockThreshold.BLOCK_NONE,
-                        ),
-                    ],
                 ),
             )
-
-            if not response.text:
-                raise ValueError("A IA retornou uma resposta vazia.")
-
-            result_json = json.loads(response.text)
-            result_json["texto_sanitizado"] = clean_text
-            result_json["modelo_utilizado"] = modelo_atual
-            return result_json
-
+            raw_json = response.text.strip()
+            parsed = json.loads(raw_json)
+            return AnalyzeResponse(**parsed)
         except Exception as e:
-            ultimo_erro = e
-            print(f"Falha no modelo {modelo_atual}: {repr(e)}")
+            last_error = e
             continue
 
-    raise HTTPException(
-        status_code=503,
-        detail=f"Todos os modelos estão temporariamente indisponíveis: {str(ultimo_erro)}"
-    )
+    raise HTTPException(status_code=502, detail=f"Falha ao consultar modelos de IA: {str(last_error)}")
+
+
+@app.post("/falar")
+async def gerar_audio_neural(req: SpeechRequest):
+    texto_limpo = req.text.strip()[:1500]
+    if not texto_limpo:
+        raise HTTPException(status_code=400, detail="Texto vazio para leitura.")
+
+    try:
+        communicate = edge_tts.Communicate(
+            texto_limpo,
+            voice="pt-BR-FranciscaNeural",
+            rate="-5%"
+        )
+
+        audio_buffer = io.BytesIO()
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_buffer.write(chunk["data"])
+
+        audio_buffer.seek(0)
+        return StreamingResponse(audio_buffer, media_type="audio/mpeg")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar áudio neural: {str(e)}")
