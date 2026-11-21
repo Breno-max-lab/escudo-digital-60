@@ -3,9 +3,10 @@ import re
 import io
 import json
 import base64
+import edge_tts
 from gtts import gTTS
 from typing import Optional, List
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -23,8 +24,8 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 
 app = FastAPI(
     title="Escudo Digital 60+ API",
-    description="Backend multimodal com proteção LGPD e síntese de voz natural para inclusão digital de idosos.",
-    version="2.1.0"
+    description="Backend multimodal com proteção LGPD e voz neural para inclusão digital de idosos.",
+    version="2.2.0"
 )
 
 app.add_middleware(
@@ -36,26 +37,16 @@ app.add_middleware(
 )
 
 
-# ==============================================================================
-# 1. SANITIZAÇÃO LGPD (ANONIMIZAÇÃO DE DADOS SENSÍVEIS)
-# ==============================================================================
 def sanitize_pii(text: str) -> str:
     if not text:
         return ""
-    # Mascara CPFs (000.000.000-00 ou 11 dígitos seguidos)
     text = re.sub(r"\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b", "[CPF_OCULTO]", text)
-    # Mascara telefones brasileiros
     text = re.sub(r"\b(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\d{4}|\d{4})-?\d{4}\b", "[TELEFONE_OCULTO]", text)
-    # Mascara e-mails
     text = re.sub(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}", "[EMAIL_OCULTO]", text)
-    # Mascara possíveis números de cartão/conta longos
     text = re.sub(r"\b\d{13,19}\b", "[NUMERO_CONTA_OCULTO]", text)
     return text
 
 
-# ==============================================================================
-# 2. MODELOS DE DADOS (REQUEST / RESPONSE)
-# ==============================================================================
 class AnalyzeRequest(BaseModel):
     text: Optional[str] = ""
     image_base64: Optional[str] = None
@@ -63,20 +54,13 @@ class AnalyzeRequest(BaseModel):
 
 
 class AnalyzeResponse(BaseModel):
-    nivel_risco: str  # "ALTO", "MEDIO" ou "BAIXO"
+    nivel_risco: str
     titulo_alerta: str
     sinais_alerta: List[str]
     acao_recomendada: str
     texto_para_audio: str
 
 
-class SpeechRequest(BaseModel):
-    text: str
-
-
-# ==============================================================================
-# 3. PROMPT CALIBRADO PARA O PÚBLICO 60+
-# ==============================================================================
 SYSTEM_PROMPT = """
 Você é o assistente de segurança digital do projeto 'Escudo Digital 60+' (PET-IEG / UFOPA, Santarém - Pará).
 Sua missão é analisar mensagens de texto ou capturas de tela (prints) de WhatsApp, SMS ou e-mail para ajudar pessoas idosas (60+) a identificarem golpes virtuais com clareza, acolhimento e linguagem simples.
@@ -87,7 +71,7 @@ REGRAS IMPORTANTES DE CALIBRAÇÃO:
    - Classifique como "ALTO" quando houver pedido urgente de Pix/dinheiro para parente ou terceiro, links suspeitos que imitam bancos/governo (phishing), solicitação de senha/código de verificação, instalação de aplicativos externos ou cobrança de taxa para liberar prêmio/benefício.
    - Classifique como "MEDIO" quando a mensagem for ambígua, de remetente desconhecido ou contiver ofertas exageradas sem pedido direto de dinheiro.
 2. Linguagem acessível:
-   - Use frases curtas, diretas e sem jargões técnicos em inglês (evite palavras como 'phishing', 'malware' ou 'spoofing'; explique o risco em português claro).
+   - Use frases curtas, diretas e sem jargões técnicos em inglês.
    - O campo 'texto_para_audio' deve ser um resumo fluido, natural e acolhedor para ser lido em voz alta para um idoso.
 
 Responda EXCLUSIVAMENTE em JSON válido seguindo exatamente esta estrutura:
@@ -101,9 +85,6 @@ Responda EXCLUSIVAMENTE em JSON válido seguindo exatamente esta estrutura:
 """
 
 
-# ==============================================================================
-# 4. ENDPOINTS DA API
-# ==============================================================================
 @app.get("/")
 def health_check():
     return {"status": "online", "service": "Escudo Digital 60+ API"}
@@ -138,7 +119,6 @@ async def analisar_mensagem(req: AnalyzeRequest):
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Erro ao processar imagem enviada: {str(e)}")
 
-    # Fallback resiliente entre modelos Gemini
     candidate_models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
     last_error = None
 
@@ -162,15 +142,32 @@ async def analisar_mensagem(req: AnalyzeRequest):
     raise HTTPException(status_code=502, detail=f"Falha ao consultar modelos de IA: {str(last_error)}")
 
 
-@app.post("/falar")
-async def gerar_audio_neural(req: SpeechRequest):
-    texto_limpo = req.text.strip()[:1500]
-    if not texto_limpo:
-        raise HTTPException(status_code=400, detail="Texto vazio para leitura.")
+@app.get("/falar")
+async def gerar_audio_stream(text: str = Query(..., min_length=1, max_length=1500)):
+    texto_limpo = text.strip()
+    audio_buffer = io.BytesIO()
 
+    # 1ª Tentativa: Voz Neural Francisca (Microsoft Edge Neural - qualidade humana)
     try:
-        tts = gTTS(text=texto_limpo, lang="pt", tld="com.br", slow=False)
+        communicate = edge_tts.Communicate(
+            texto_limpo,
+            voice="pt-BR-FranciscaNeural",
+            rate="-4%"
+        )
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                audio_buffer.write(chunk["data"])
+
+        if audio_buffer.tell() > 0:
+            audio_buffer.seek(0)
+            return StreamingResponse(audio_buffer, media_type="audio/mpeg")
+    except Exception:
+        pass
+
+    # 2ª Tentativa (Fallback no servidor): Google TTS Brasil
+    try:
         audio_buffer = io.BytesIO()
+        tts = gTTS(text=texto_limpo, lang="pt", tld="com.br", slow=False)
         tts.write_to_fp(audio_buffer)
         audio_buffer.seek(0)
         return StreamingResponse(audio_buffer, media_type="audio/mpeg")
